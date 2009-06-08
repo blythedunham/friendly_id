@@ -26,7 +26,8 @@ module FriendlyId
     :strip_diacritics,
     :strip_non_ascii,
     :use_slug,
-    :backup ].freeze
+    :backup,
+    :skip_blank ].freeze
 
   # This error is raised when it's not possible to generate a unique slug.
   class SlugGenerationError < StandardError ; end

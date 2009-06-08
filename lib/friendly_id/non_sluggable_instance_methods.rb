@@ -29,7 +29,8 @@ module FriendlyId::NonSluggableInstanceMethods
   private
   
   def validate_friendly_id
-    if self.class.friendly_id_options[:reserved].include? friendly_id
+    if self.class.friendly_id_options[:reserved].include?(friendly_id) &&
+      !(self.class.friendly_id_options[:skip_blank] || self.class.friendly_id_options[:backup] )
       self.errors.add(self.class.friendly_id_options[:column],
         self.class.friendly_id_options[:reserved_message] % friendly_id)
       return false

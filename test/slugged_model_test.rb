@@ -190,7 +190,42 @@ class SluggedModelTest < Test::Unit::TestCase
         assert_equal("my_backup_method", @post.slug_text)
       end
     end
+    context "and skip blank slugs" do
+      setup do
+        Post.friendly_id_options = Post.friendly_id_options.merge(:strip_non_ascii => true, :skip_blank => true)
+      end
+      should "skip blank slugs when blank from stripping all content" do
+        @post = Post.create!(:title => "検 索")
+        assert_equal('', @post.slug_text)
+        assert(@post.slugs.blank?)
+        assert_equal(@post.id.to_s, @post.to_param)
+        assert_nil(@post.friendly_id)
+      end
 
+      should "skip setting a slug if a reserved word is used" do
+        @post = Post.create!(:title => "new")
+        assert_equal('', @post.slug_text)
+        assert(@post.slugs.blank?)
+        assert_equal(@post.id.to_s, @post.to_param)
+        assert_nil(@post.friendly_id)
+      end
+      
+      should "skip setting a slug if the column is blank" do
+        @post = Post.create!(:title => nil)
+        assert_equal('', @post.slug_text)
+        assert(@post.slugs.blank?)
+        assert_equal(@post.id.to_s, @post.to_param)
+        assert_nil(@post.friendly_id)
+      end
+      
+      should "should use ascii characters as slug" do
+        @post = Post.create!(:title => "katakana ゲコゴサザシジ")
+        assert_equal("katakana", @post.slug_text)
+        assert_equal('katakana', @post.to_param)
+        assert_equal('katakana', @post.friendly_id)
+      end
+   end
+   
     context "that doesn't have a slug" do
 
       setup do

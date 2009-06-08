@@ -33,8 +33,9 @@ module FriendlyId::SluggableInstanceMethods
 
   # Returns the friendly id.
   def friendly_id
-    slug(true).to_friendly_id
+    slug.to_friendly_id if slug(true)
   end
+
   alias best_id friendly_id
 
   # Has the basis of our friendly id changed, requiring the generation of a
@@ -74,8 +75,10 @@ module FriendlyId::SluggableInstanceMethods
       base = base[0...friendly_id_options[:max_length]]
     end
     if friendly_id_options[:reserved].include?(base)
-      raise FriendlyId::SlugGenerationError.new("The slug text is a reserved value") unless self.friendly_id_options[:backup]
-      base = nil
+      unless self.friendly_id_options[:backup] || self.class.friendly_id_options[:skip_blank]
+        raise FriendlyId::SlugGenerationError.new("The slug text is a reserved value")
+      end
+      base = ''
     end
 
     # if the base is blank but the original base is not, use the backup method
@@ -110,6 +113,7 @@ module FriendlyId::SluggableInstanceMethods
     if self.class.friendly_id_options[:use_slug] && new_slug_needed?
       @most_recent_slug = nil
       slug_attributes = {:name => slug_text}
+      return true if slug_attributes[:name].blank? && self.class.friendly_id_options[:skip_blank]
       if friendly_id_options[:scope]
         scope = send(friendly_id_options[:scope])
         slug_attributes[:scope] = scope.respond_to?(:to_param) ? scope.to_param : scope.to_s
