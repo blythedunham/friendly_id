@@ -25,7 +25,8 @@ module FriendlyId
     :scope,
     :strip_diacritics,
     :strip_non_ascii,
-    :use_slug ].freeze
+    :use_slug,
+    :backup ].freeze
 
   # This error is raised when it's not possible to generate a unique slug.
   class SlugGenerationError < StandardError ; end
@@ -44,7 +45,8 @@ module FriendlyId
     # * <tt>:strip_non_ascii</tt> - Defaults to false. If true, it will all non-ascii ([^a-z0-9]) characters.
     # * <tt>:reserved</tt> - Array of words that are reserved and can't be used as friendly_id's. For sluggable models, if such a word is used, it will be treated the same as if that slug was already taken (numeric extension will be appended). Defaults to ["new", "index"].
     # * <tt>:reserved_message</tt> - The validation message that will be shown when a reserved word is used as a frindly_id. Defaults to '"%s" is reserved'.
-    #
+    # * <tt>:backup</tt> - A method name or Proc object that is returned if the original slug text cannot be used (reserved word or using ascii and no characters are ascii)
+    # 
     # You can also optionally pass a block if you want to use your own custom
     # slugnormalization routines rather than the default ones that come with
     # friendly_id:

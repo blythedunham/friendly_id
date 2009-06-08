@@ -148,6 +148,49 @@ class SluggedModelTest < Test::Unit::TestCase
       end
     end
 
+    context "and configured to have a backup proc" do
+      setup do
+        Post.friendly_id_options = Post.friendly_id_options.merge(:strip_non_ascii => true, :backup => Proc.new {|record, og| "backup_plan"})
+      end
+      should "use the backup proc when all of title is stripped away" do
+        @post = Post.new(:title => "検 索")
+        assert_equal("backup_plan", @post.slug_text)
+      end
+      should "use ascii characters as slug" do
+        @post = Post.new(:title => "katakana: ゲコゴサザシジ")
+        assert_equal "katakana", @post.slug_text
+      end
+      should "user backup roc when a reserved word is used" do
+        @post = Post.new(:title => "new")
+        assert_equal("backup_plan", @post.slug_text)
+      end
+      should "should use backup slug with reserved word and ascii characters" do
+        @post = Post.new(:title => "new ゲコゴサザシジ")
+        assert_equal("backup_plan", @post.slug_text)
+      end
+    end
+    context "and configured to have a backup method" do
+      setup do
+        Post.friendly_id_options = Post.friendly_id_options.merge(:strip_non_ascii => true, :backup => :my_backup_method)
+      end
+      should "use the backup proc when all of title is stripped away" do
+        @post = Post.new(:title => "検 索")
+        assert_equal("my_backup_method", @post.slug_text)
+      end
+      should "use ascii characters as slug" do
+        @post = Post.new(:title => "katakana: ゲコゴサザシジ")
+        assert_equal "katakana", @post.slug_text
+      end
+      should "user backup roc when a reserved word is used" do
+        @post = Post.new(:title => "new")
+        assert_equal("my_backup_method", @post.slug_text)
+      end
+      should "should use backup slug with reserved word and ascii characters" do
+        @post = Post.new(:title => "new ゲコゴサザシジ")
+        assert_equal("my_backup_method", @post.slug_text)
+      end
+    end
+
     context "that doesn't have a slug" do
 
       setup do

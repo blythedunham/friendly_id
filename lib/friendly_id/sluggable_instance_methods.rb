@@ -57,7 +57,7 @@ module FriendlyId::SluggableInstanceMethods
 
   # Get the processed string used as the basis of the friendly id.
   def slug_text
-    base = send friendly_id_options[:column]
+    original_base = base = send(friendly_id_options[:column])
     if self.slug_normalizer_block
       base = self.slug_normalizer_block.call(base)
     else
@@ -74,8 +74,18 @@ module FriendlyId::SluggableInstanceMethods
       base = base[0...friendly_id_options[:max_length]]
     end
     if friendly_id_options[:reserved].include?(base)
-      raise FriendlyId::SlugGenerationError.new("The slug text is a reserved value")
+      raise FriendlyId::SlugGenerationError.new("The slug text is a reserved value") unless self.friendly_id_options[:backup]
+      base = nil
     end
+
+    # if the base is blank but the original base is not, use the backup method
+    # or proc if specified
+    if base.blank? && self.friendly_id_options[:backup] && !original_base.blank?
+      base = self.friendly_id_options[:backup].is_a?(Proc) ?
+        self.friendly_id_options[:backup].call(self, original_base) :
+        send(self.friendly_id_options[:backup])
+    end
+
     return base
   end
 
